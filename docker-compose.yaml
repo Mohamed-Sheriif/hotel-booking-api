@@ -1,0 +1,29 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: hotel_postgres
+    environment:
+      POSTGRES_USER: nestuser
+      POSTGRES_PASSWORD: nestpass
+      POSTGRES_DB: hotel_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: hotel_app
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - '3000:3000'
+    depends_on:
+      - postgres
+    env_file:
+      - .env.${NODE_ENV} # <- This loads the right .env file
+    environment:
+      NODE_ENV: ${NODE_ENV} # <- Pass NODE_ENV into the container
+
+volumes:
+  postgres_data:

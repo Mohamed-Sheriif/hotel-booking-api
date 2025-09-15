@@ -6,6 +6,7 @@ import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import envValidation from './config/env.validation';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         synchronize: config.get('database.syncronize'), // ⚠️ dev only
       }),
     }),
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

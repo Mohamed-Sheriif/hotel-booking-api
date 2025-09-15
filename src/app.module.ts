@@ -7,6 +7,11 @@ import databaseConfig from './config/database.config';
 import envValidation from './config/env.validation';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import authConfig from './auth/config/auth.config';
+import { JwtModule } from '@nestjs/jwt';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthorizeGuard } from './auth/guards/authorize.guard';
 
 @Module({
   imports: [
@@ -30,9 +35,18 @@ import { UsersModule } from './users/users.module';
         synchronize: config.get('database.syncronize'), // ⚠️ dev only
       }),
     }),
+    ConfigModule.forFeature(authConfig),
+    JwtModule.registerAsync(authConfig.asProvider()),
+    AuthModule,
     UsersModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: AuthorizeGuard,
+    },
+  ],
 })
 export class AppModule {}

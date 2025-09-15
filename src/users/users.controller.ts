@@ -6,10 +6,14 @@ import {
   Patch,
   Param,
   Delete,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ActiveUser } from 'src/auth/decorator/active-user.decorator';
+import { UserType } from './entities/user.entity';
+import { ActiveUserType } from 'src/auth/interfaces/active-user-type.interface';
 
 @Controller('api/users')
 export class UsersController {
@@ -21,22 +25,32 @@ export class UsersController {
   }
 
   @Get()
-  async findAll() {
-    return this.usersService.findAll();
+  async findAll(@ActiveUser('user_type') user_type: UserType) {
+    return this.usersService.findAll(user_type);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number) {
-    return this.usersService.findOne(id);
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() activeUser: ActiveUserType,
+  ) {
+    return this.usersService.findOne(id, activeUser);
   }
 
   @Patch(':id')
-  async update(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser('sub') sub: number,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return this.usersService.update(id, sub, updateUserDto);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: number) {
-    return this.usersService.remove(id);
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() activeUser: ActiveUserType,
+  ) {
+    return this.usersService.remove(id, activeUser);
   }
 }

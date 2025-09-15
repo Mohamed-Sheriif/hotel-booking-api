@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
   RequestTimeoutException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -12,6 +13,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { HashingProvider } from 'src/provider/hashing.provider';
 import { UserType } from './entities/user.entity';
 import { User } from './entities/user.entity';
+import { ActiveUserType } from 'src/auth/interfaces/active-user-type.interface';
 
 @Injectable()
 export class UsersService {
@@ -54,12 +56,15 @@ export class UsersService {
       };
     } catch (error) {
       console.error('Error creating user:', error);
-      throw new RequestTimeoutException('Could not create user at this time');
+      throw error;
     }
   }
 
-  async findAll() {
+  async findAll(user_type: UserType) {
     try {
+      if (user_type !== UserType.Admin) {
+        throw new UnauthorizedException('Unauthorized, Only admin allowed !');
+      }
       const users = await this.usersRepository.find();
 
       return {
@@ -68,30 +73,32 @@ export class UsersService {
       };
     } catch (error) {
       console.error('Error retrieving users:', error);
-      throw new RequestTimeoutException(
-        'Could not retrieving users at this time',
-      );
+      throw error;
     }
   }
 
   async findByEmail(email: string) {
     try {
-      const user = await this.usersRepository.findOne({ where: { email } });
-
-      return {
-        status: 'Success',
-        user,
-      };
+      return await this.usersRepository.findOne({ where: { email } });
     } catch (error) {
       console.error('Error retrieving user:', error);
-      throw new RequestTimeoutException(
-        'Could not retrieving user at this time',
-      );
+      throw error;
     }
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, activeUser: ActiveUserType) {
     try {
+      // User can only retrieve his account
+      if (
+        id !== activeUser.sub &&
+        activeUser.user_type !== UserType.Admin &&
+        activeUser.user_type !== UserType.Staff
+      ) {
+        throw new UnauthorizedException(
+          'Unauthorized, Users can only retrieve thier accounts !',
+        );
+      }
+
       const user = await this.usersRepository.findOne({ where: { id } });
       if (!user) {
         throw new NotFoundException('User not found');
@@ -103,14 +110,17 @@ export class UsersService {
       };
     } catch (error) {
       console.error('Error retrieving user:', error);
-      throw new RequestTimeoutException(
-        'Could not retrieving user at this time',
-      );
+      throw error;
     }
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
+  async update(id: number, sub: number, updateUserDto: UpdateUserDto) {
     try {
+      // User can only update his account
+      if (id !== sub) {
+        throw new UnauthorizedException('Unauthorized !');
+      }
+
       const user = await this.usersRepository.findOne({ where: { id } });
       if (!user) {
         throw new NotFoundException('User not found');
@@ -130,16 +140,24 @@ export class UsersService {
       };
     } catch (error) {
       console.error('Error updating user:', error);
-      throw new RequestTimeoutException('Could not update user at this time');
+      throw error;
     }
   }
 
-  async remove(id: number) {
+  async remove(id: number, activeUser: ActiveUserType) {
     try {
+      // User can only delete his account
+      if (id !== activeUser.sub && activeUser.user_type !== UserType.Admin) {
+        throw new UnauthorizedException('Unauthorized !');
+      }
+
+      // Check if user exist
       const user = await this.usersRepository.findOne({ where: { id } });
       if (!user) {
         throw new NotFoundException('User not found');
       }
+
+      // Remove user
       await this.usersRepository.remove(user);
 
       return {
@@ -148,7 +166,7 @@ export class UsersService {
       };
     } catch (error) {
       console.error('Error removing user:', error);
-      throw new RequestTimeoutException('Could not remove user at this time');
+      throw error;
     }
   }
 }

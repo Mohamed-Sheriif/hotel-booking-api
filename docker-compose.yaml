@@ -3,9 +3,9 @@ services:
     image: postgres:15
     container_name: hotel_postgres
     environment:
-      POSTGRES_USER: nestuser
-      POSTGRES_PASSWORD: nestpass
-      POSTGRES_DB: hotel_db
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
     ports:
       - '5432:5432'
     volumes:

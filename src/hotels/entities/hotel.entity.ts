@@ -5,6 +5,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { OneToOne } from 'typeorm';
+import { HotelStaff } from 'src/hotel-staff/entities/hotel-staff.entity';
 
 @Entity('hotels')
 export class Hotel {
@@ -40,4 +42,7 @@ export class Hotel {
 
   @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   updatedAt: Date;
+
+  @OneToOne(() => HotelStaff, (hotelStaff) => hotelStaff.hotel)
+  hotel_staff: HotelStaff;
 }

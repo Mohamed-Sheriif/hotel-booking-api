@@ -12,6 +12,7 @@ import authConfig from './auth/config/auth.config';
 import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthorizeGuard } from './auth/guards/authorize.guard';
+import { HotelsModule } from './hotels/hotels.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { AuthorizeGuard } from './auth/guards/authorize.guard';
     JwtModule.registerAsync(authConfig.asProvider()),
     AuthModule,
     UsersModule,
+    HotelsModule,
   ],
   controllers: [AppController],
   providers: [

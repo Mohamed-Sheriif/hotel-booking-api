@@ -1,11 +1,14 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
-import { RegisterDto } from './dto/register.dto';
+import { RegisterCustomerDto } from './dto/register-customer.dto';
 import { LoginDto } from './dto/login.dto';
 import { HashingProvider } from '../provider/hashing.provider';
 import authConfig from './config/auth.config';
 import { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { ActiveUserType } from './interfaces/active-user-type.interface';
+import { UserType } from 'src/users/entities/user.entity';
+import { RegisterStaffDto } from './dto/register-staff.dto';
 
 @Injectable()
 export class AuthService {
@@ -59,7 +62,18 @@ export class AuthService {
     };
   }
 
-  async register(registerDto: RegisterDto) {
-    return this.userService.createUser(registerDto);
+  async registerCustomer(registerCustomerDto: RegisterCustomerDto) {
+    return this.userService.createCustomerUser(registerCustomerDto);
+  }
+
+  async registerStaff(
+    registerStaffDto: RegisterStaffDto,
+    user: ActiveUserType,
+  ) {
+    if (user.user_type !== UserType.Admin) {
+      throw new UnauthorizedException('Only admin can create staff!');
+    }
+
+    return await this.userService.createStaffUser(registerStaffDto);
   }
 }

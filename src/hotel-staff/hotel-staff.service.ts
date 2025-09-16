@@ -23,11 +23,7 @@ export class HotelStaffService {
     private readonly hotelsRepository: Repository<Hotel>,
   ) {}
 
-  async assignStaffToHotel(dto: AssignStaffDto, activeUser: ActiveUserType) {
-    if (activeUser.user_type !== UserType.Admin) {
-      throw new UnauthorizedException('Only admin can assign staff!');
-    }
-
+  async assignStaffToHotel(dto: AssignStaffDto) {
     const user = await this.usersRepository.findOne({
       where: { id: dto.userId },
     });
@@ -55,9 +51,8 @@ export class HotelStaffService {
       position: dto.position ?? null,
       is_active: true,
     });
-    const saved = await this.hotelStaffRepository.save(staff);
 
-    return { status: 'Success', staff: saved };
+    return await this.hotelStaffRepository.save(staff);
   }
 
   async removeStaffFromHotel(staffId: number, activeUser: ActiveUserType) {

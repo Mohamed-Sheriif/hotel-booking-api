@@ -1,8 +1,11 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { RegisterDto } from './dto/register.dto';
+import { RegisterCustomerDto } from './dto/register-customer.dto';
 import { LoginDto } from './dto/login.dto';
 import { AllowAnonymous } from './decorator/allow-anonymous.decorator';
+import { ActiveUserType } from './interfaces/active-user-type.interface';
+import { ActiveUser } from './decorator/active-user.decorator';
+import { RegisterStaffDto } from './dto/register-staff.dto';
 
 @Controller('api/auth')
 export class AuthController {
@@ -16,8 +19,16 @@ export class AuthController {
   }
 
   @AllowAnonymous()
-  @Post('register')
-  async register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
+  @Post('register/customer')
+  async registerCustomer(@Body() registerCustomerDto: RegisterCustomerDto) {
+    return this.authService.registerCustomer(registerCustomerDto);
+  }
+
+  @Post('register/staff')
+  async registerStaff(
+    @Body() registerStaffDto: RegisterStaffDto,
+    @ActiveUser() user: ActiveUserType,
+  ) {
+    return this.authService.registerStaff(registerStaffDto, user);
   }
 }

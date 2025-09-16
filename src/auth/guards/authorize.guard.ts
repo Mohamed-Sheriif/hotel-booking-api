@@ -30,6 +30,8 @@ export class AuthorizeGuard implements CanActivate {
       context.getClass(),
     ]);
 
+    console.log(isPublic);
+
     if (isPublic) {
       return true;
     }

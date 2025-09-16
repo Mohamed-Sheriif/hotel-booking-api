@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
-  RequestTimeoutException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Repository } from 'typeorm';
@@ -14,16 +13,19 @@ import { HashingProvider } from 'src/provider/hashing.provider';
 import { UserType } from './entities/user.entity';
 import { User } from './entities/user.entity';
 import { ActiveUserType } from 'src/auth/interfaces/active-user-type.interface';
+import { HotelStaffService } from 'src/hotel-staff/hotel-staff.service';
+import { RegisterStaffDto } from 'src/auth/dto/register-staff.dto';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    private hotelStaffService: HotelStaffService,
     private readonly hashingProvider: HashingProvider,
   ) {}
 
-  async createUser(createUserDto: CreateUserDto) {
+  async createCustomerUser(createUserDto: CreateUserDto) {
     try {
       // check if email already exists
       const existingUser = await this.usersRepository.findOne({
@@ -53,6 +55,51 @@ export class UsersService {
       return {
         status: 'Success',
         result,
+      };
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw error;
+    }
+  }
+
+  async createStaffUser(createUserDto: RegisterStaffDto) {
+    try {
+      // check if email already exists
+      const existingUser = await this.usersRepository.findOne({
+        where: { email: createUserDto.email },
+      });
+      if (existingUser) {
+        throw new BadRequestException('Email already exists!');
+      }
+
+      // hash password
+      const hashedPassword = await this.hashingProvider.hashPassword(
+        createUserDto.password,
+      );
+
+      // save user to database
+      const newUser = this.usersRepository.create({
+        ...createUserDto,
+        password_hash: hashedPassword,
+        user_type: UserType.Staff,
+      });
+
+      // Saving user
+      const savedUser = await this.usersRepository.save(newUser);
+
+      // Assign user to a hotel
+      const hotelStaff = await this.hotelStaffService.assignStaffToHotel({
+        userId: savedUser.id,
+        hotelId: createUserDto.hotel_id,
+        position: createUserDto.position,
+      });
+
+      const { password_hash, ...userResult } = savedUser;
+      const { id, user, created_at, ...hotelStaffResult } = hotelStaff;
+
+      return {
+        status: 'Success',
+        result: { ...userResult, ...hotelStaffResult },
       };
     } catch (error) {
       console.error('Error creating user:', error);

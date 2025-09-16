@@ -1,14 +1,16 @@
 import {
   IsEmail,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
   Matches,
   MaxLength,
+  Min,
   MinLength,
 } from 'class-validator';
 
-export class RegisterDto {
+export class RegisterStaffDto {
   @IsString()
   @IsNotEmpty()
   first_name: string;
@@ -37,4 +39,12 @@ export class RegisterDto {
       'Phone number must be a valid Egyptian number (starts with 010, 012, or 015 and is 11 digits long)',
   })
   phone_number?: string;
+
+  @IsInt()
+  @Min(1)
+  hotel_id: number;
+
+  @IsString()
+  @IsOptional()
+  position?: string;
 }

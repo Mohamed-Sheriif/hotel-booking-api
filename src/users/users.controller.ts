@@ -20,8 +20,8 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  async createUser(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.createUser(createUserDto);
+  async createCustomerUser(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.createCustomerUser(createUserDto);
   }
 
   @Get()

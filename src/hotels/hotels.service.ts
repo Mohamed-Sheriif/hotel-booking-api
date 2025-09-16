@@ -57,8 +57,10 @@ export class HotelsService {
     updateHotelDto: UpdateHotelDto,
     activeUser: ActiveUserType,
   ) {
-    if (activeUser.user_type !== UserType.Staff) {
-      throw new UnauthorizedException('Only staff can update hotels!');
+    if (activeUser.user_type !== UserType.Staff && activeUser.hotel_id !== id) {
+      throw new UnauthorizedException(
+        'Only staff that assigned to this hotel can update!',
+      );
     }
 
     const hotel = await this.hotelsRepository.findOne({ where: { id } });

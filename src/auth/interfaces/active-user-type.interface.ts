@@ -4,4 +4,5 @@ export interface ActiveUserType {
   sub: number;
   email: string;
   user_type: UserType;
+  hotel_id: number;
 }

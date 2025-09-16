@@ -55,6 +55,14 @@ export class HotelStaffService {
     return await this.hotelStaffRepository.save(staff);
   }
 
+  async getHotelStaffByUserId(userId: number) {
+    const staff = await this.hotelStaffRepository.findOne({
+      where: { user: { id: userId } },
+    });
+
+    return staff;
+  }
+
   async removeStaffFromHotel(staffId: number, activeUser: ActiveUserType) {
     if (activeUser.user_type !== UserType.Admin) {
       throw new UnauthorizedException('Only admin can remove staff!');

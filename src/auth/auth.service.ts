@@ -9,6 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ActiveUserType } from './interfaces/active-user-type.interface';
 import { UserType } from 'src/users/entities/user.entity';
 import { RegisterStaffDto } from './dto/register-staff.dto';
+import { HotelStaffService } from 'src/hotel-staff/hotel-staff.service';
 
 @Injectable()
 export class AuthService {
@@ -18,6 +19,7 @@ export class AuthService {
     private readonly userService: UsersService,
     private readonly hashingProvider: HashingProvider,
     private readonly jwtService: JwtService,
+    private readonly hotelStaffService: HotelStaffService,
   ) {}
 
   async login(loginDto: LoginDto) {
@@ -36,11 +38,17 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    // Get hotel that this user is assigned if its a staff user
+    const hotelStaff = await this.hotelStaffService.getHotelStaffByUserId(
+      user.id,
+    );
+
     // Generate JWT token
     const payload = {
       sub: user.id,
       email: user.email,
       user_type: user.user_type,
+      hotel_id: hotelStaff?.hotel.id ?? 0,
     };
 
     const token = await this.jwtService.signAsync(payload, {

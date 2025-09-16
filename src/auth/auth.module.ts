@@ -7,10 +7,12 @@ import { BcryptProvider } from '../provider/bcrypt.provider';
 import { ConfigModule } from '@nestjs/config';
 import authConfig from './config/auth.config';
 import { JwtModule } from '@nestjs/jwt';
+import { HotelStaffModule } from 'src/hotel-staff/hotel-staff.module';
 
 @Module({
   imports: [
     UsersModule,
+    HotelStaffModule,
     ConfigModule.forFeature(authConfig),
     JwtModule.registerAsync(authConfig.asProvider()),
   ],

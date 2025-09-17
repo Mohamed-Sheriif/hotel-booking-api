@@ -13,6 +13,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthorizeGuard } from './auth/guards/authorize.guard';
 import { HotelsModule } from './hotels/hotels.module';
+import { RoomTypesModule } from './room-types/room-types.module';
+import { RoomsModule } from './rooms/rooms.module';
 import { HotelStaffModule } from './hotel-staff/hotel-staff.module';
 
 @Module({
@@ -42,6 +44,8 @@ import { HotelStaffModule } from './hotel-staff/hotel-staff.module';
     AuthModule,
     UsersModule,
     HotelsModule,
+    RoomTypesModule,
+    RoomsModule,
     HotelStaffModule,
   ],
   controllers: [AppController],

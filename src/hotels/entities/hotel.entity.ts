@@ -2,11 +2,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { OneToOne } from 'typeorm';
 import { HotelStaff } from 'src/hotel-staff/entities/hotel-staff.entity';
+import { Room } from 'src/rooms/entities/room.entity';
 
 @Entity('hotels')
 export class Hotel {
@@ -45,4 +47,7 @@ export class Hotel {
 
   @OneToOne(() => HotelStaff, (hotelStaff) => hotelStaff.hotel)
   hotel_staff: HotelStaff;
+
+  @OneToMany(() => Room, (room) => room.hotel)
+  rooms: Room[];
 }

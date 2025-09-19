@@ -50,7 +50,6 @@ export class AuthorizeGuard implements CanActivate {
         token,
         this.authConfiguration,
       );
-      console.log(payload);
 
       request[REQUEST_USER_KEY] = payload;
     } catch (error) {

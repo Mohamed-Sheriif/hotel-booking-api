@@ -10,12 +10,14 @@ import { CreateRoomDto } from 'src/rooms/dto/create-room.dto';
 import { UpdateRoomDto } from 'src/rooms/dto/update-room.dto';
 import { ActiveUserType } from 'src/auth/interfaces/active-user-type.interface';
 import { UserType } from 'src/users/entities/user.entity';
+import { RoomTypesService } from 'src/room-types/room-types.service';
 
 @Injectable()
 export class RoomsService {
   constructor(
     @InjectRepository(Room)
     private readonly roomsRepository: Repository<Room>,
+    private readonly roomTypeService: RoomTypesService,
   ) {}
 
   private ensureHotelScope(user: ActiveUserType, hotel_id: number) {
@@ -36,6 +38,15 @@ export class RoomsService {
 
     // Ensure user belong to this hotel
     this.ensureHotelScope(user, createRoomDto.hotel_id ?? 0);
+
+    // Ensure room type exist
+    const roomType = await this.roomTypeService.findOne(
+      parseInt(createRoomDto.room_number),
+      user,
+    );
+    if (!roomType) {
+      throw new NotFoundException('Room Type not found');
+    }
 
     const entity = this.roomsRepository.create({
       ...createRoomDto,

@@ -16,6 +16,7 @@ import { HotelsModule } from './hotels/hotels.module';
 import { RoomTypesModule } from './room-types/room-types.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { HotelStaffModule } from './hotel-staff/hotel-staff.module';
+import { ReservationsModule } from './reservations/reservations.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { HotelStaffModule } from './hotel-staff/hotel-staff.module';
     RoomTypesModule,
     RoomsModule,
     HotelStaffModule,
+    ReservationsModule,
   ],
   controllers: [AppController],
   providers: [

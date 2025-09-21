@@ -56,14 +56,17 @@ export class RoomsService {
     return await this.roomsRepository.save(entity);
   }
 
-  async findAllForHotel(user: ActiveUserType) {
+  async findAllForHotel(hotelId: number) {
     return await this.roomsRepository.find({
-      where: { hotel_id: user.hotel_id },
+      where: { hotel_id: hotelId },
     });
   }
 
   async findOne(id: number) {
-    const room = await this.roomsRepository.findOne({ where: { id } });
+    const room = await this.roomsRepository.findOne({
+      where: { id },
+      relations: ['reservations'],
+    });
     if (!room) throw new NotFoundException('Room not found');
 
     return room;

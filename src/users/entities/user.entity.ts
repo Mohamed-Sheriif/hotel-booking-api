@@ -2,11 +2,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { OneToOne } from 'typeorm';
 import { HotelStaff } from 'src/hotel-staff/entities/hotel-staff.entity';
+import { Reservation } from 'src/reservations/entities/reservation.entity';
 
 export enum UserType {
   Customer = 'Customer',
@@ -67,4 +69,7 @@ export class User {
 
   @OneToOne(() => HotelStaff, (hotelStaff) => hotelStaff.user)
   hotel_staff?: HotelStaff;
+
+  @OneToMany(() => Reservation, (reservation) => reservation.customer)
+  reservations?: Reservation[];
 }

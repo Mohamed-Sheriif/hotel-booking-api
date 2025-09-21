@@ -13,6 +13,7 @@ import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { ActiveUser } from 'src/auth/decorator/active-user.decorator';
 import { ActiveUserType } from 'src/auth/interfaces/active-user-type.interface';
+import { AllowAnonymous } from 'src/auth/decorator/allow-anonymous.decorator';
 
 @Controller('api/rooms')
 export class RoomsController {
@@ -30,12 +31,14 @@ export class RoomsController {
     );
   }
 
-  @Get()
-  async findAll(@ActiveUser() user: ActiveUserType) {
-    return this.roomsService.findAllForHotel(user);
+  @AllowAnonymous()
+  @Get(':hotelId')
+  async findAllForHotel(@Param('hotelId', ParseIntPipe) hotelId: number) {
+    return this.roomsService.findAllForHotel(hotelId);
   }
 
-  @Get(':id')
+  @AllowAnonymous()
+  @Get(':id/reservations')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.roomsService.findOne(id);
   }

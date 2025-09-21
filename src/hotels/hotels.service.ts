@@ -44,7 +44,10 @@ export class HotelsService {
   }
 
   async findOne(id: number) {
-    const hotel = await this.hotelsRepository.findOne({ where: { id } });
+    const hotel = await this.hotelsRepository.findOne({
+      where: { id },
+      relations: ['rooms'],
+    });
     if (!hotel) {
       throw new NotFoundException('Hotel not found!');
     }

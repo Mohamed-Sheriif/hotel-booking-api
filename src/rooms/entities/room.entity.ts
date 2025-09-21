@@ -8,9 +8,11 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
   Unique,
+  OneToMany,
 } from 'typeorm';
 import { Hotel } from 'src/hotels/entities/hotel.entity';
 import { RoomType } from 'src/room-types/entities/room-type.entity';
+import { Reservation } from 'src/reservations/entities/reservation.entity';
 
 @Entity('rooms')
 @Unique(['hotel_id', 'room_number'])
@@ -29,7 +31,7 @@ export class Room {
   @Column({ type: 'int', nullable: false })
   room_type_id: number;
 
-  @ManyToOne(() => RoomType, (roomType) => roomType.rooms)
+  @ManyToOne(() => RoomType, (roomType) => roomType.rooms, { eager: true })
   @JoinColumn({ name: 'room_type_id' })
   room_type: RoomType;
 
@@ -41,6 +43,9 @@ export class Room {
 
   @Column({ type: 'boolean', default: true })
   is_available: boolean;
+
+  @OneToMany(() => Reservation, (reservation) => reservation.room)
+  reservations?: Reservation[];
 
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;

@@ -12,7 +12,6 @@ import { UpdateReservationDto } from './dto/update-reservation.dto';
 import { ActiveUserType } from 'src/auth/interfaces/active-user-type.interface';
 import { UserType } from 'src/users/entities/user.entity';
 import { Room } from 'src/rooms/entities/room.entity';
-import { RoomType } from 'src/room-types/entities/room-type.entity';
 
 @Injectable()
 export class ReservationsService {
@@ -21,8 +20,6 @@ export class ReservationsService {
     private readonly reservationRepo: Repository<Reservation>,
     @InjectRepository(Room)
     private readonly roomRepo: Repository<Room>,
-    @InjectRepository(RoomType)
-    private readonly roomTypeRepo: Repository<RoomType>,
   ) {}
 
   private assertCustomer(user: ActiveUserType) {

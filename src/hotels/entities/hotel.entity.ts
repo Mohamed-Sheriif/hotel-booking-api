@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -22,6 +23,7 @@ export class Hotel {
   address: string;
 
   @Column({ type: 'varchar', length: 100, nullable: false })
+  @Index()
   city: string;
 
   @Column({ type: 'varchar', length: 100, nullable: false })
@@ -34,6 +36,7 @@ export class Hotel {
   description: string | null;
 
   @Column({ type: 'decimal', precision: 3, scale: 2, default: 0 })
+  @Index()
   average_rating: string;
 
   @Column({ type: 'int', default: 0 })

@@ -18,6 +18,7 @@ export enum ReservationStatus {
 }
 
 @Entity('reservations')
+@Index('idx_reservations_dates', ['check_in_date', 'check_out_date'])
 export class Reservation {
   @PrimaryGeneratedColumn()
   id: number;

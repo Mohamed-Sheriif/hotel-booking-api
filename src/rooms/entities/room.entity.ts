@@ -42,6 +42,7 @@ export class Room {
   floor: number | null;
 
   @Column({ type: 'boolean', default: true })
+  @Index()
   is_available: boolean;
 
   @OneToMany(() => Reservation, (reservation) => reservation.room)

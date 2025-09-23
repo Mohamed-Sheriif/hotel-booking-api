@@ -17,14 +17,32 @@ import { RoomTypesModule } from './room-types/room-types.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { HotelStaffModule } from './hotel-staff/hotel-staff.module';
 import { ReservationsModule } from './reservations/reservations.module';
+import { CacheModule } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-redis-yet';
+import redisConfig from './config/redis.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV || 'dev'}`,
-      load: [appConfig, databaseConfig],
+      load: [appConfig, databaseConfig, redisConfig],
       validationSchema: envValidation,
+    }),
+    CacheModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (config: ConfigService) => ({
+        store: await redisStore({
+          socket: {
+            host: config.get<string>('redis.host'),
+            port: config.get<number>('redis.port'),
+          },
+        }),
+        ttl: config.get<number>('redis.ttlSeconds'),
+        max: config.get<number>('redis.maxItems'),
+      }),
+      isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

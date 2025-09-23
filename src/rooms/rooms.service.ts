@@ -5,6 +5,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject } from '@nestjs/common';
+import type { Cache } from 'cache-manager';
+import { CacheKeys } from 'src/constants/cache-keys';
 import { Room } from './entities/room.entity';
 import { CreateRoomDto } from 'src/rooms/dto/create-room.dto';
 import { UpdateRoomDto } from 'src/rooms/dto/update-room.dto';
@@ -18,6 +22,7 @@ export class RoomsService {
     @InjectRepository(Room)
     private readonly roomsRepository: Repository<Room>,
     private readonly roomTypeService: RoomTypesService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
   private ensureHotelScope(user: ActiveUserType, hotel_id: number) {
@@ -57,18 +62,29 @@ export class RoomsService {
   }
 
   async findAllForHotel(hotelId: number) {
-    return await this.roomsRepository.find({
+    const cacheKey = CacheKeys.roomsByHotel(hotelId);
+    const cached = await this.cacheManager.get(cacheKey);
+    if (cached) return cached as Room[];
+
+    const rooms = await this.roomsRepository.find({
       where: { hotel_id: hotelId },
     });
+    await this.cacheManager.set(cacheKey, rooms);
+    return rooms;
   }
 
   async findOne(id: number) {
+    const cacheKey = CacheKeys.roomById(id);
+    const cached = await this.cacheManager.get(cacheKey);
+    if (cached) return cached as Room;
+
     const room = await this.roomsRepository.findOne({
       where: { id },
       relations: ['reservations'],
     });
     if (!room) throw new NotFoundException('Room not found');
 
+    await this.cacheManager.set(cacheKey, room);
     return room;
   }
 
@@ -95,7 +111,12 @@ export class RoomsService {
 
     Object.assign(existing, updateRoomDto);
 
-    return await this.roomsRepository.save(existing);
+    const saved = await this.roomsRepository.save(existing);
+    await Promise.all([
+      this.cacheManager.del(CacheKeys.roomById(id)),
+      this.cacheManager.del(CacheKeys.roomsByHotel(existing.hotel_id)),
+    ]);
+    return saved;
   }
 
   async remove(id: number, user: ActiveUserType) {
@@ -112,6 +133,11 @@ export class RoomsService {
     this.ensureHotelScope(user, existing.hotel_id);
 
     await this.roomsRepository.remove(existing);
+
+    await Promise.all([
+      this.cacheManager.del(CacheKeys.roomById(id)),
+      this.cacheManager.del(CacheKeys.roomsByHotel(existing.hotel_id)),
+    ]);
 
     return { success: true };
   }

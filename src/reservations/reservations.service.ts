@@ -4,6 +4,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject } from '@nestjs/common';
+import type { Cache } from 'cache-manager';
+import { CacheKeys } from 'src/constants/cache-keys';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Reservation, ReservationStatus } from './entities/reservation.entity';
@@ -20,6 +24,7 @@ export class ReservationsService {
     private readonly reservationRepo: Repository<Reservation>,
     @InjectRepository(Room)
     private readonly roomRepo: Repository<Room>,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
   private assertCustomer(user: ActiveUserType) {
@@ -146,17 +151,28 @@ export class ReservationsService {
       status: ReservationStatus.Pending,
     });
 
-    return this.reservationRepo.save(reservation);
+    const saved = await this.reservationRepo.save(reservation);
+    await Promise.all([
+      this.cacheManager.del(CacheKeys.reservationsByHotel(user.hotel_id ?? 0)),
+      this.cacheManager.del(CacheKeys.reservationsByCustomer(user.sub)),
+    ]);
+    return saved;
   }
 
   async findAll(user: ActiveUserType) {
     // Staff: all reservations for their hotel
     this.assertStaff(user);
-    return this.reservationRepo
+    const cacheKey = CacheKeys.reservationsByHotel(user.hotel_id ?? 0);
+    const cached = await this.cacheManager.get(cacheKey);
+    if (cached) return cached as Reservation[];
+
+    const results = await this.reservationRepo
       .createQueryBuilder('r')
       .innerJoin(Room, 'room', 'room.id = r.room_id')
       .where('room.hotel_id = :hotelId', { hotelId: user.hotel_id })
       .getMany();
+    await this.cacheManager.set(cacheKey, results);
+    return results;
   }
 
   async findRoomReservations(roomId: number, user: ActiveUserType) {
@@ -180,10 +196,17 @@ export class ReservationsService {
       if (user.sub !== customerId) {
         throw new ForbiddenException('You can only view your own reservations');
       }
-      return this.reservationRepo.find({
+      const cacheKey = CacheKeys.reservationsByCustomer(customerId);
+      const cached = await this.cacheManager.get(cacheKey);
+      if (cached)
+        return cached as Array<Reservation & { room: Room; room_type: any }>;
+
+      const result = await this.reservationRepo.find({
         where: { customer_id: customerId },
         relations: ['room', 'room.room_type'],
       });
+      await this.cacheManager.set(cacheKey, result);
+      return result;
     }
 
     // Staff can only see reservations for customers who have reservations at their hotel
@@ -198,6 +221,10 @@ export class ReservationsService {
   }
 
   async findOne(id: number, user: ActiveUserType) {
+    const cacheKey = CacheKeys.reservationById(id);
+    const cached = await this.cacheManager.get(cacheKey);
+    if (cached) return cached as Reservation;
+
     const res = await this.reservationRepo.findOne({ where: { id } });
     if (!res) throw new NotFoundException('Reservation not found');
 
@@ -212,6 +239,7 @@ export class ReservationsService {
       if (!room || room.hotel_id !== user.hotel_id)
         throw new ForbiddenException();
     }
+    await this.cacheManager.set(cacheKey, res);
     return res;
   }
 
@@ -262,6 +290,13 @@ export class ReservationsService {
     }
 
     await this.reservationRepo.update({ id }, next);
+    await Promise.all([
+      this.cacheManager.del(CacheKeys.reservationById(id)),
+      this.cacheManager.del(CacheKeys.reservationsByHotel(user.hotel_id ?? 0)),
+      this.cacheManager.del(
+        CacheKeys.reservationsByCustomer(existing.customer_id),
+      ),
+    ]);
     return this.findOne(id, user);
   }
 
@@ -282,6 +317,14 @@ export class ReservationsService {
     }
 
     await this.reservationRepo.delete({ id });
+
+    await Promise.all([
+      this.cacheManager.del(CacheKeys.reservationById(id)),
+      this.cacheManager.del(CacheKeys.reservationsByHotel(user.hotel_id ?? 0)),
+      this.cacheManager.del(
+        CacheKeys.reservationsByCustomer(existing.customer_id),
+      ),
+    ]);
 
     return { success: true };
   }

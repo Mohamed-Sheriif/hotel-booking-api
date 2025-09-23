@@ -5,6 +5,10 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Repository } from 'typeorm';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject } from '@nestjs/common';
+import type { Cache } from 'cache-manager';
+import { CacheKeys } from 'src/constants/cache-keys';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { CreateUserDto } from './dto/create-user.dto';
@@ -23,6 +27,7 @@ export class UsersService {
     private usersRepository: Repository<User>,
     private hotelStaffService: HotelStaffService,
     private readonly hashingProvider: HashingProvider,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
   async createCustomerUser(createUserDto: CreateUserDto) {
@@ -112,7 +117,15 @@ export class UsersService {
       if (user_type !== UserType.Admin) {
         throw new UnauthorizedException('Unauthorized, Only admin allowed !');
       }
+      const cacheKey = CacheKeys.usersListAll;
+      const cached = await this.cacheManager.get(cacheKey);
+      if (cached) {
+        return { status: 'Success', users: cached };
+      }
+
       const users = await this.usersRepository.find();
+
+      await this.cacheManager.set(cacheKey, users);
 
       return {
         status: 'Success',
@@ -126,7 +139,13 @@ export class UsersService {
 
   async findByEmail(email: string) {
     try {
-      return await this.usersRepository.findOne({ where: { email } });
+      const cacheKey = CacheKeys.userByEmail(email);
+      const cached = await this.cacheManager.get(cacheKey);
+      if (cached) return cached as User | null;
+
+      const user = await this.usersRepository.findOne({ where: { email } });
+      if (user) await this.cacheManager.set(cacheKey, user);
+      return user;
     } catch (error) {
       console.error('Error retrieving user:', error);
       throw error;
@@ -146,11 +165,17 @@ export class UsersService {
         );
       }
 
+      const cacheKey = CacheKeys.userById(id);
+      const cached = await this.cacheManager.get(cacheKey);
+      if (cached) {
+        return { status: 'Success', user: cached };
+      }
+
       const user = await this.usersRepository.findOne({ where: { id } });
       if (!user) {
         throw new NotFoundException('User not found');
       }
-
+      await this.cacheManager.set(cacheKey, user);
       return {
         status: 'Success',
         user,
@@ -179,6 +204,13 @@ export class UsersService {
       // Saving user
       const savedUser = await this.usersRepository.save(user);
 
+      // Invalidate caches
+      await Promise.all([
+        this.cacheManager.del(CacheKeys.userById(id)),
+        this.cacheManager.del(CacheKeys.userByEmail(user.email)),
+        this.cacheManager.del(CacheKeys.usersListAll),
+      ]);
+
       const { password_hash, ...result } = savedUser;
 
       return {
@@ -206,6 +238,13 @@ export class UsersService {
 
       // Remove user
       await this.usersRepository.remove(user);
+
+      // Invalidate caches
+      await Promise.all([
+        this.cacheManager.del(CacheKeys.userById(id)),
+        this.cacheManager.del(CacheKeys.userByEmail(user.email)),
+        this.cacheManager.del(CacheKeys.usersListAll),
+      ]);
 
       return {
         status: 'Success',

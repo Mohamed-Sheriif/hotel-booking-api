@@ -46,7 +46,7 @@ export class RoomsService {
 
     // Ensure room type exist
     const roomType = await this.roomTypeService.findOne(
-      parseInt(createRoomDto.room_number),
+      createRoomDto.room_type_id,
       user,
     );
     if (!roomType) {

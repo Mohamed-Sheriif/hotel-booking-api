@@ -15,12 +15,14 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject } from '@nestjs/common';
 import type { Cache } from 'cache-manager';
 import { CacheKeys } from 'src/constants/cache-keys';
+import { HotelStaffService } from 'src/hotel-staff/hotel-staff.service';
 
 @Injectable()
 export class HotelsService {
   constructor(
     @InjectRepository(Hotel)
     private readonly hotelsRepository: Repository<Hotel>,
+    private readonly hotelStaffService: HotelStaffService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
@@ -54,6 +56,28 @@ export class HotelsService {
     const hotels = await this.hotelsRepository.find();
     await this.cacheManager.set(cacheKey, hotels);
     return { status: 'Success', hotels };
+  }
+
+  async getHotelStaff(hotelId: number, activeUser: ActiveUserType) {
+    if (
+      activeUser.user_type != UserType.Admin &&
+      activeUser.user_type != UserType.Staff
+    ) {
+      throw new UnauthorizedException();
+    }
+
+    if (
+      activeUser.user_type == UserType.Staff &&
+      activeUser.hotel_id != hotelId
+    ) {
+      throw new UnauthorizedException(
+        'Staff users can only see thier hotel staff !',
+      );
+    }
+
+    const hotelStaff = await this.hotelStaffService.listHotelStaff(hotelId);
+
+    return { message: 'success', hotelStaff };
   }
 
   async findOne(id: number) {

@@ -91,6 +91,6 @@ export class HotelStaffService {
       where: { hotel: { id: hotelId } },
     });
 
-    return { status: 'Success', staff };
+    return staff;
   }
 }

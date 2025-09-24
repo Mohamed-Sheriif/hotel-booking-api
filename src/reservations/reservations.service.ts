@@ -264,7 +264,12 @@ export class ReservationsService {
     if (dto.check_in_date || dto.check_out_date) {
       this.validateDates(next.check_in_date, next.check_out_date);
     }
-    if (dto.room_id || dto.number_of_guests) {
+    if (
+      dto.room_id ||
+      dto.number_of_guests ||
+      dto.check_in_date ||
+      dto.check_out_date
+    ) {
       const room = await this.assertRoomExistsAndCapacity(
         next.room_id,
         next.number_of_guests,
@@ -280,13 +285,11 @@ export class ReservationsService {
           'Room is not available for the selected dates',
         );
       // Recalculate total price if dates changed or room changed
-      if (dto.check_in_date || dto.check_out_date || dto.room_id) {
-        next.total_price = this.calculateTotalPrice(
-          room.room_type.base_price,
-          next.check_in_date,
-          next.check_out_date,
-        );
-      }
+      next.total_price = this.calculateTotalPrice(
+        room.room_type.base_price,
+        next.check_in_date,
+        next.check_out_date,
+      );
     }
 
     await this.reservationRepo.update({ id }, next);

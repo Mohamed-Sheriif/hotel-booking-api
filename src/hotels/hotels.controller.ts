@@ -32,6 +32,13 @@ export class HotelsController {
   async findAll() {
     return this.hotelsService.findAll();
   }
+  @Get(':id/staff')
+  async getHotelStaff(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() activeUser: ActiveUserType,
+  ) {
+    return this.hotelsService.getHotelStaff(id, activeUser);
+  }
 
   @AllowAnonymous()
   @Get(':id')

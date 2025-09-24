@@ -37,10 +37,12 @@ export class RoomTypesService {
 
   async findOne(id: number, user: ActiveUserType) {
     if (user.user_type !== UserType.Staff) {
-      throw new UnauthorizedException('Only staff can create room types!');
+      throw new UnauthorizedException('Only staff can get room types!');
     }
 
     const found = await this.roomTypesRepository.findOne({ where: { id } });
+    console.log(id);
+    console.log(typeof id);
     if (!found) throw new NotFoundException('Room type not found');
 
     return found;

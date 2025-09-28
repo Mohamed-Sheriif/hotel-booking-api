@@ -1,70 +1,71 @@
-import {
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  Length,
-  MaxLength,
-} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class CreateHotelDto {
+export class HotelResponseDto {
+  @ApiProperty({
+    description: 'Unique identifier for the hotel',
+    example: 1,
+  })
+  id: number;
+
   @ApiProperty({
     description: 'The name of the hotel',
     example: 'Grand Palace Hotel',
-    maxLength: 255,
   })
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(255)
   name: string;
 
   @ApiProperty({
     description: 'The complete address of the hotel',
     example: '123 Main Street, Downtown District',
   })
-  @IsString()
-  @IsNotEmpty()
   address: string;
 
   @ApiProperty({
     description: 'The city where the hotel is located',
     example: 'Cairo',
-    maxLength: 100,
-    minLength: 1,
   })
-  @IsString()
-  @IsNotEmpty()
-  @Length(1, 100)
   city: string;
 
   @ApiProperty({
     description: 'The country where the hotel is located',
     example: 'Egypt',
-    maxLength: 100,
-    minLength: 1,
   })
-  @IsString()
-  @IsNotEmpty()
-  @Length(1, 100)
   country: string;
 
   @ApiProperty({
     description: 'The contact phone number of the hotel',
     example: '+20 123 456 7890',
-    maxLength: 20,
-    minLength: 1,
   })
-  @IsString()
-  @IsNotEmpty()
-  @Length(1, 20)
   phone_number: string;
 
   @ApiPropertyOptional({
     description: 'Optional description of the hotel',
     example:
       'A luxurious hotel with world-class amenities and exceptional service',
+    nullable: true,
   })
-  @IsString()
-  @IsOptional()
-  description?: string;
+  description?: string | null;
+
+  @ApiProperty({
+    description: 'Average rating of the hotel (0.00 to 5.00)',
+    example: '4.5',
+  })
+  average_rating: string;
+
+  @ApiProperty({
+    description: 'Total number of reviews for the hotel',
+    example: 150,
+  })
+  review_count: number;
+
+  @ApiProperty({
+    description: 'Date when the hotel was created',
+    example: '2024-01-15T10:30:00.000Z',
+  })
+  createdAt: Date;
+
+  @ApiProperty({
+    description: 'Date when the hotel was last updated',
+    example: '2024-01-15T10:30:00.000Z',
+  })
+  updatedAt: Date;
 }

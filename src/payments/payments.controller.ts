@@ -11,17 +11,26 @@ import {
   ParseIntPipe,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBearerAuth,
+  ApiBody,
+} from '@nestjs/swagger';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
+import { PaymentResponseDto } from './dto/payment-response.dto';
 import { ActiveUser } from '../auth/decorator/active-user.decorator';
 import { ActiveUserType } from '../auth/interfaces/active-user-type.interface';
-import { PaymentResponseDto } from './dto/payment-response.dto';
 import { AuthorizeGuard } from '../auth/guards/authorize.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorator/roles.decorator';
 import { UserType } from '../users/entities/user.entity';
 
+@ApiTags('Payments')
 @Controller('api/payments')
 @UseGuards(AuthorizeGuard, RolesGuard)
 export class PaymentsController {
@@ -29,6 +38,37 @@ export class PaymentsController {
 
   // 1. Create a new payment for a reservation
   @Post()
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Create a new payment',
+    description:
+      'Creates a new payment for a reservation. Customers can create payments for their own reservations.',
+  })
+  @ApiBody({
+    type: CreatePaymentDto,
+    description: 'Payment creation data',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Payment created successfully',
+    type: PaymentResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - Invalid input data',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Authentication required',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Can only create payments for own reservations',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Reservation not found',
+  })
   @Roles(UserType.Customer, UserType.Admin, UserType.Staff)
   async create(
     @Body() createPaymentDto: CreatePaymentDto,
@@ -44,15 +84,61 @@ export class PaymentsController {
 
   // 2. Get all payments (Staff only)
   @Get()
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Get all payments',
+    description:
+      'Retrieves all payments. Requires staff or admin authentication.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of payments retrieved successfully',
+    type: [PaymentResponseDto],
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Authentication required',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Staff or admin access required',
+  })
   @Roles(UserType.Admin, UserType.Staff)
-  async findAll(): Promise<PaymentResponseDto> {
-    const payment = await this.paymentsService.findAll();
-
-    return this.mapToResponseDto(payment);
+  async findAll(): Promise<PaymentResponseDto[]> {
+    const payments = await this.paymentsService.findAll();
+    return payments.map((payment) => this.mapToResponseDto(payment));
   }
 
   // 3. Get a specific payment by ID
   @Get(':id')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Get payment by ID',
+    description: 'Retrieves detailed information about a specific payment.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Payment ID',
+    type: 'number',
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Payment information retrieved successfully',
+    type: PaymentResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Authentication required',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Can only access own payments',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Payment not found',
+  })
   @Roles(UserType.Customer, UserType.Admin, UserType.Staff)
   async findOne(
     @Param('id', ParseIntPipe) id: number,
@@ -65,6 +151,34 @@ export class PaymentsController {
 
   // 4. Get payment by reservation ID
   @Get('reservation/:reservationId')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Get payment by reservation ID',
+    description: 'Retrieves payment information for a specific reservation.',
+  })
+  @ApiParam({
+    name: 'reservationId',
+    description: 'Reservation ID',
+    type: 'number',
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Payment information retrieved successfully',
+    type: PaymentResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Authentication required',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Can only access own reservation payments',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Payment not found for this reservation',
+  })
   @Roles(UserType.Customer, UserType.Admin, UserType.Staff)
   async findByReservation(
     @Param('reservationId', ParseIntPipe) reservationId: number,
@@ -80,6 +194,43 @@ export class PaymentsController {
 
   // 5. Update payment details (Staff only)
   @Patch(':id')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Update payment details',
+    description:
+      'Updates payment information. Requires staff or admin authentication.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Payment ID',
+    type: 'number',
+    example: 1,
+  })
+  @ApiBody({
+    type: UpdatePaymentDto,
+    description: 'Payment update data',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Payment updated successfully',
+    type: PaymentResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - Invalid input data',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Authentication required',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Staff or admin access required',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Payment not found',
+  })
   @Roles(UserType.Admin, UserType.Staff)
   async update(
     @Param('id', ParseIntPipe) id: number,
@@ -97,6 +248,35 @@ export class PaymentsController {
 
   // 6. Confirm a payment (Manual confirmation if needed)
   @Post(':id/confirm')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Confirm payment',
+    description:
+      'Manually confirms a payment. Requires staff or admin authentication.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Payment ID',
+    type: 'number',
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Payment confirmed successfully',
+    type: PaymentResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Authentication required',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Staff or admin access required',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Payment not found',
+  })
   @Roles(UserType.Admin, UserType.Staff)
   async confirmPayment(
     @Param('id', ParseIntPipe) id: number,
@@ -109,6 +289,52 @@ export class PaymentsController {
 
   // 7. Process a refund
   @Post(':id/refund')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Process payment refund',
+    description:
+      'Processes a refund for a payment. Requires staff or admin authentication.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Payment ID',
+    type: 'number',
+    example: 1,
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        amount: {
+          type: 'number',
+          description: 'Refund amount (optional, defaults to full amount)',
+          example: 75.0,
+        },
+      },
+    },
+    description: 'Refund data',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Refund processed successfully',
+    type: PaymentResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - Invalid refund amount',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Authentication required',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Staff or admin access required',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Payment not found',
+  })
   @Roles(UserType.Admin, UserType.Staff)
   async refundPayment(
     @Param('id', ParseIntPipe) id: number,

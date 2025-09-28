@@ -5,11 +5,13 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { Room } from 'src/rooms/entities/room.entity';
+import { Payment } from 'src/payments/entities/payment.entity';
 
 export enum ReservationStatus {
   Confirmed = 'confirmed',
@@ -30,6 +32,9 @@ export class Reservation {
   @ManyToOne(() => User, (user) => user.reservations)
   @JoinColumn({ name: 'customer_id' })
   customer: User;
+
+  @OneToMany(() => Payment, (payment) => payment.reservation)
+  payments: Payment[];
 
   @Column({ type: 'int', nullable: false })
   @Index()

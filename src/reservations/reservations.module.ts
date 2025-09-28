@@ -9,5 +9,6 @@ import { Room } from 'src/rooms/entities/room.entity';
   imports: [TypeOrmModule.forFeature([Reservation, Room])],
   controllers: [ReservationsController],
   providers: [ReservationsService],
+  exports: [ReservationsService],
 })
 export class ReservationsModule {}

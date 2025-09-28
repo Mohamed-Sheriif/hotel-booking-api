@@ -19,7 +19,9 @@ import { HotelStaffModule } from './hotel-staff/hotel-staff.module';
 import { ReservationsModule } from './reservations/reservations.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
+import { PaymentsModule } from './payments/payments.module';
 import redisConfig from './config/redis.config';
+import { StripeModule } from './stripe/stripe.module';
 
 @Module({
   imports: [
@@ -67,6 +69,8 @@ import redisConfig from './config/redis.config';
     RoomsModule,
     HotelStaffModule,
     ReservationsModule,
+    PaymentsModule,
+    StripeModule,
   ],
   controllers: [AppController],
   providers: [

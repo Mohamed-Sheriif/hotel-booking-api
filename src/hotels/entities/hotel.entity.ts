@@ -10,6 +10,7 @@ import {
 import { OneToOne } from 'typeorm';
 import { HotelStaff } from 'src/hotel-staff/entities/hotel-staff.entity';
 import { Room } from 'src/rooms/entities/room.entity';
+import { Review } from 'src/reviews/entities/review.entity';
 
 @Entity('hotels')
 export class Hotel {
@@ -53,4 +54,7 @@ export class Hotel {
 
   @OneToMany(() => Room, (room) => room.hotel)
   rooms: Room[];
+
+  @OneToMany(() => Review, (review) => review.hotel)
+  reviews: Review[];
 }

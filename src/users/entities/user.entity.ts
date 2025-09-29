@@ -9,6 +9,7 @@ import {
 import { OneToOne } from 'typeorm';
 import { HotelStaff } from 'src/hotel-staff/entities/hotel-staff.entity';
 import { Reservation } from 'src/reservations/entities/reservation.entity';
+import { Review } from 'src/reviews/entities/review.entity';
 
 export enum UserType {
   Customer = 'Customer',
@@ -72,4 +73,7 @@ export class User {
 
   @OneToMany(() => Reservation, (reservation) => reservation.customer)
   reservations?: Reservation[];
+
+  @OneToMany(() => Review, (review) => review.user)
+  reviews?: Review[];
 }

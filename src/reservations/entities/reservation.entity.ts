@@ -12,6 +12,7 @@ import {
 import { User } from 'src/users/entities/user.entity';
 import { Room } from 'src/rooms/entities/room.entity';
 import { Payment } from 'src/payments/entities/payment.entity';
+import { Review } from 'src/reviews/entities/review.entity';
 
 export enum ReservationStatus {
   Confirmed = 'confirmed',
@@ -35,6 +36,9 @@ export class Reservation {
 
   @OneToMany(() => Payment, (payment) => payment.reservation)
   payments: Payment[];
+
+  @OneToMany(() => Review, (review) => review.reservation)
+  reviews: Review[];
 
   @Column({ type: 'int', nullable: false })
   @Index()

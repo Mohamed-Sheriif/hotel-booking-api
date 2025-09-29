@@ -22,6 +22,7 @@ import { redisStore } from 'cache-manager-redis-yet';
 import { PaymentsModule } from './payments/payments.module';
 import redisConfig from './config/redis.config';
 import { StripeModule } from './stripe/stripe.module';
+import { ReviewsModule } from './reviews/reviews.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { StripeModule } from './stripe/stripe.module';
     ReservationsModule,
     PaymentsModule,
     StripeModule,
+    ReviewsModule,
   ],
   controllers: [AppController],
   providers: [

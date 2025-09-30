@@ -3,40 +3,52 @@ services:
     image: postgres:15
     container_name: hotel_postgres
     env_file:
-      - .env.${NODE_ENV}
+      - .env.${NODE_ENV:-dev}
     environment:
-      POSTGRES_USER: ${DATABASE_USER}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USER:-nestuser}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-nestpass}
+      POSTGRES_DB: ${DATABASE_NAME:-hotel_db}
     ports:
-      - '5432:5432'
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DATABASE_USER:-nestuser} -d ${DATABASE_NAME:-hotel_db}",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   redis:
     image: redis:7
     container_name: hotel_redis
     ports:
-      - '6379:6379'
+      - "6379:6379"
     volumes:
       - redis_data:/data
     restart: always
     env_file:
-      - .env.${NODE_ENV}
+      - .env.${NODE_ENV:-dev}
+
   app:
     build: .
     container_name: hotel_app
     volumes:
       - .:/usr/src/app
     ports:
-      - '3000:3000'
+      - "3000:3000"
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
     env_file:
-      - .env.${NODE_ENV} # <- This loads the right .env file
+      - .env.${NODE_ENV:-dev}
     environment:
-      NODE_ENV: ${NODE_ENV} # <- Pass NODE_ENV into the container
+      NODE_ENV: ${NODE_ENV:-dev}
 
 volumes:
   postgres_data:

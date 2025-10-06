@@ -1,69 +1,34 @@
-# Multi-stage Dockerfile for Hotel Booking API
+# Multi-stage Dockerfile (simple two stages: development, production)
 
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# Stage 1: Base stage with common dependencies
-FROM node:18-alpine AS base
-
+# =======================
+# Development stage
+# =======================
+FROM node:18-alpine AS development
 WORKDIR /usr/src/app
 
-# Copy package files
+# Install all dependencies (dev + prod)
 COPY package*.json ./
-
-# Install dependencies (including dev dependencies)
 RUN npm ci
 
-# Copy source code
+# Copy source
 COPY . .
 
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# Stage 2: Development stage
-FROM base AS development
-
-# Install all dependencies (including dev dependencies)
-RUN npm ci
-
-# Expose port
 EXPOSE 3000
-
-# Start in development mode with watch
 CMD ["npm", "run", "start:dev"]
 
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# Stage 3: Build stage
-FROM base AS build
-
-RUN npm ci
-RUN npm run build
-
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# Stage 4: Production stage
+# =======================
+# Production stage
+# =======================
 FROM node:18-alpine AS production
-
 WORKDIR /usr/src/app
 
-# Copy package files
+# Install full deps to build, then prune to production-only
 COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build \
+  && npm prune --production \
+  && npm cache clean --force
 
-# Install only production dependencies
-RUN npm ci --only=production && npm cache clean --force
-
-# Copy built application from build stage
-COPY --from=build /usr/src/app/dist ./dist
-
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nestjs -u 1001
-
-# Change ownership of the app directory
-RUN chown -R nestjs:nodejs /usr/src/app
-USER nestjs
-
-# Expose port
 EXPOSE 3000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node dist/main.js || exit 1
-
-# Start the application
 CMD ["node", "dist/main.js"]

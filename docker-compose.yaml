@@ -34,7 +34,9 @@ services:
       - .env.${NODE_ENV:-dev}
 
   app:
-    build: .
+    build:
+      context: .
+      target: ${BUILD_TARGET:-development}
     container_name: hotel_app
     volumes:
       - .:/usr/src/app

@@ -32,10 +32,7 @@ CMD ["npm", "run", "start:dev"]
 # Stage 3: Build stage
 FROM base AS build
 
-# Install all dependencies for building
 RUN npm ci
-
-# Build the application
 RUN npm run build
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

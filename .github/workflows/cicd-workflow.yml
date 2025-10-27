@@ -28,6 +28,6 @@ jobs:
       - name: Pull image from Docker Hub
         run: docker pull mohamedsheriif/hotel-booking-api:latest
       - name: Stop and remove container
-        run: docker stop hotel-booking-api && docker rm hotel-booking-api
+        run: docker stop hotel-booking-api || true && docker rm hotel-booking-api || true
       - name: Run container
         run: docker run -d -p 3000:3000 --name hotel-booking-api  mohamedsheriif/hotel-booking-api:latest

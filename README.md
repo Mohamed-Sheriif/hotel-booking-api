@@ -252,7 +252,7 @@ The application includes Docker configuration for easy deployment:
 docker build -t hotel-booking-api .
 
 # Run with Docker Compose
-NODE_ENV= development docker-compose up -d
+docker-compose up -d
 ```
 
 ## Contributing

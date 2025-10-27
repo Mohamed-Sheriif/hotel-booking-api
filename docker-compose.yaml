@@ -3,7 +3,7 @@ services:
     image: postgres:15
     container_name: hotel_postgres
     env_file:
-      - .env.${NODE_ENV:-dev}
+      - .env
     environment:
       POSTGRES_USER: ${DATABASE_USER:-nestuser}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-nestpass}
@@ -31,12 +31,12 @@ services:
       - redis_data:/data
     restart: always
     env_file:
-      - .env.${NODE_ENV:-dev}
+      - .env
 
   app:
     build:
       context: .
-      target: ${BUILD_TARGET:-development}
+      target: ${BUILD_TARGET:-production}
     container_name: hotel_app
     volumes:
       - .:/usr/src/app
@@ -48,9 +48,7 @@ services:
       redis:
         condition: service_started
     env_file:
-      - .env.${NODE_ENV:-dev}
-    environment:
-      NODE_ENV: ${NODE_ENV:-dev}
+      - .env
 
 volumes:
   postgres_data:

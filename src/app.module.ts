@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import envValidation from './config/env.validation';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -28,8 +27,8 @@ import { ReviewsModule } from './reviews/reviews.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: `.env.${process.env.NODE_ENV || 'dev'}`,
-      load: [appConfig, databaseConfig, redisConfig],
+      envFilePath: `.env`,
+      load: [databaseConfig, redisConfig],
       validationSchema: envValidation,
     }),
     CacheModule.registerAsync({

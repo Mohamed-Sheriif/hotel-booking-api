@@ -234,7 +234,7 @@ The API implements a robust authentication system with:
 - `PATCH /notifications/:id/read` - Mark notification as read
 - `DELETE /notifications/:id` - Delete notification
 
-### Reviews (In Development)
+### Reviews
 
 - `GET /reviews` - List reviews
 - `POST /reviews` - Create review

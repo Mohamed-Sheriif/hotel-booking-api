@@ -34,18 +34,59 @@ services:
     env_file:
       - .env
 
-  app:
+  app1:
     image: mohamedsheriif/hotel-booking-api:latest
-    container_name: hotel_app
-    ports:
-      - "3000:3000"
+    container_name: hotel_app1
+    expose:
+      - "3000"
+    env_file:
+      - .env
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_started
+    restart: always
+
+  app2:
+    image: mohamedsheriif/hotel-booking-api:latest
+    container_name: hotel_app2
+    expose:
+      - "3000"
     env_file:
       - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: always
+
+  app3:
+    image: mohamedsheriif/hotel-booking-api:latest
+    container_name: hotel_app3
+    expose:
+      - "3000"
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: always
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: hotel_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app1
+      - app2
+      - app3
     restart: always
 
 volumes:
